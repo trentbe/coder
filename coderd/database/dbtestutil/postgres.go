@@ -352,7 +352,7 @@ func openContainer(t TBSubset, opts DBContainerOptions) (container, func(), erro
 		nameHashStr := hex.EncodeToString(nameHash[:])
 		lock := flock.New(filepath.Join(os.TempDir(), "coder-postgres-container-"+nameHashStr[:8]))
 		if err := lock.Lock(); err != nil {
-			return container{}, nil, xerrors.Errorf("lock: %w", err)
+			return container{}, func() {}, xerrors.Errorf("lock: %w", err)
 		}
 		defer func() {
 			err := lock.Unlock()
@@ -364,7 +364,7 @@ func openContainer(t TBSubset, opts DBContainerOptions) (container, func(), erro
 
 	pool, err := dockertest.NewPool("")
 	if err != nil {
-		return container{}, nil, xerrors.Errorf("create pool: %w", err)
+		return container{}, func() {}, xerrors.Errorf("create pool: %w", err)
 	}
 
 	var resource *dockertest.Resource
@@ -376,7 +376,7 @@ func openContainer(t TBSubset, opts DBContainerOptions) (container, func(), erro
 	if resource == nil {
 		tempDir, err = os.MkdirTemp(os.TempDir(), "postgres")
 		if err != nil {
-			return container{}, nil, xerrors.Errorf("create tempdir: %w", err)
+			return container{}, func() {}, xerrors.Errorf("create tempdir: %w", err)
 		}
 		runOptions := dockertest.RunOptions{
 			Repository: "gcr.io/coder-dev-1/postgres",
@@ -421,14 +421,14 @@ func openContainer(t TBSubset, opts DBContainerOptions) (container, func(), erro
 			}
 		})
 		if err != nil {
-			return container{}, nil, xerrors.Errorf("could not start resource: %w", err)
+			return container{}, func() {}, xerrors.Errorf("could not start resource: %w", err)
 		}
 	}
 
 	hostAndPort := resource.GetHostPort("5432/tcp")
 	host, port, err := net.SplitHostPort(hostAndPort)
 	if err != nil {
-		return container{}, nil, xerrors.Errorf("split host and port: %w", err)
+		return container{}, func() {}, xerrors.Errorf("split host and port: %w", err)
 	}
 
 	for r := retry.New(50*time.Millisecond, 15*time.Second); r.Wait(context.Background()); {
@@ -443,7 +443,7 @@ func openContainer(t TBSubset, opts DBContainerOptions) (container, func(), erro
 		}
 	}
 	if err != nil {
-		return container{}, nil, xerrors.Errorf("pg_isready: %w", err)
+		return container{}, func() {}, xerrors.Errorf("pg_isready: %w", err)
 	}
 
 	return container{
@@ -470,7 +470,7 @@ func OpenContainerized(t TBSubset, opts DBContainerOptions) (string, func(), err
 		}
 	}()
 	if err != nil {
-		return "", nil, xerrors.Errorf("open container: %w", err)
+		return "", func() {}, xerrors.Errorf("open container: %w", err)
 	}
 	dbURL := ConnectionParams{
 		Username: "postgres",
