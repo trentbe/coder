@@ -1,5 +1,7 @@
 {
-	"versions": ["main"],
+	"versions": [
+		"main"
+	],
 	"routes": [
 		{
 			"title": "About",
@@ -8,7 +10,7 @@
 			"icon_path": "./images/icons/home.svg",
 			"children": [
 				{
-					"title": "Coder quickstart",
+					"title": "Quickstart",
 					"description": "Try it out for yourself",
 					"path": "./tutorials/quickstart.md"
 				},
@@ -195,7 +197,10 @@
 							"title": "Appearance",
 							"description": "Learn how to configure the appearance of Coder",
 							"path": "./admin/setup/appearance.md",
-							"state": ["enterprise", "premium"]
+							"state": [
+								"enterprise",
+								"premium"
+							]
 						},
 						{
 							"title": "Telemetry",
@@ -271,22 +276,34 @@
 						{
 							"title": "Groups \u0026 Roles",
 							"path": "./admin/users/groups-roles.md",
-							"state": ["enterprise", "premium"]
+							"state": [
+								"enterprise",
+								"premium"
+							]
 						},
 						{
 							"title": "IDP Sync",
 							"path": "./admin/users/idp-sync.md",
-							"state": ["enterprise", "premium"]
+							"state": [
+								"enterprise",
+								"premium"
+							]
 						},
 						{
 							"title": "Organizations",
 							"path": "./admin/users/organizations.md",
-							"state": ["premium", "beta"]
+							"state": [
+								"premium",
+								"beta"
+							]
 						},
 						{
 							"title": "Quotas",
 							"path": "./admin/users/quotas.md",
-							"state": ["enterprise", "premium"]
+							"state": [
+								"enterprise",
+								"premium"
+							]
 						},
 						{
 							"title": "Sessions \u0026 API Tokens",
@@ -406,7 +423,10 @@
 									"title": "Process Logging",
 									"description": "Log workspace processes",
 									"path": "./admin/templates/extending-templates/process-logging.md",
-									"state": ["enterprise", "premium"]
+									"state": [
+										"enterprise",
+										"premium"
+									]
 								}
 							]
 						},
@@ -419,7 +439,10 @@
 							"title": "Permissions \u0026 Policies",
 							"description": "Learn how to create templates with Terraform",
 							"path": "./admin/templates/template-permissions.md",
-							"state": ["enterprise", "premium"]
+							"state": [
+								"enterprise",
+								"premium"
+							]
 						},
 						{
 							"title": "Troubleshooting Templates",
@@ -433,7 +456,10 @@
 					"description": "Learn how to run external provisioners with Coder",
 					"path": "./admin/provisioners.md",
 					"icon_path": "./images/icons/key.svg",
-					"state": ["enterprise", "premium"]
+					"state": [
+						"enterprise",
+						"premium"
+					]
 				},
 				{
 					"title": "External Auth",
@@ -504,13 +530,19 @@
 							"title": "Workspace Proxies",
 							"description": "Run geo distributed workspace proxies",
 							"path": "./admin/networking/workspace-proxies.md",
-							"state": ["enterprise", "premium"]
+							"state": [
+								"enterprise",
+								"premium"
+							]
 						},
 						{
 							"title": "High Availability",
 							"description": "Learn how to configure Coder for High Availability",
 							"path": "./admin/networking/high-availability.md",
-							"state": ["enterprise", "premium"]
+							"state": [
+								"enterprise",
+								"premium"
+							]
 						},
 						{
 							"title": "Troubleshooting",
@@ -544,19 +576,25 @@
 							"title": "Notifications",
 							"description": "Configure notifications for your deployment",
 							"path": "./admin/monitoring/notifications/index.md",
-							"state": ["beta"],
+							"state": [
+								"beta"
+							],
 							"children": [
 								{
 									"title": "Slack Notifications",
 									"description": "Learn how to setup Slack notifications",
 									"path": "./admin/monitoring/notifications/slack.md",
-									"state": ["beta"]
+									"state": [
+										"beta"
+									]
 								},
 								{
 									"title": "Microsoft Teams Notifications",
 									"description": "Learn how to setup Microsoft Teams notifications",
 									"path": "./admin/monitoring/notifications/teams.md",
-									"state": ["beta"]
+									"state": [
+										"beta"
+									]
 								}
 							]
 						}
@@ -572,7 +610,10 @@
 							"title": "Audit Logs",
 							"description": "Audit actions taken inside Coder",
 							"path": "./admin/security/audit-logs.md",
-							"state": ["enterprise", "premium"]
+							"state": [
+								"enterprise",
+								"premium"
+							]
 						},
 						{
 							"title": "Secrets",
@@ -583,7 +624,10 @@
 							"title": "Database Encryption",
 							"description": "Encrypt the database to prevent unauthorized access",
 							"path": "./admin/security/database-encryption.md",
-							"state": ["enterprise", "premium"]
+							"state": [
+								"enterprise",
+								"premium"
+							]
 						}
 					]
 				},
@@ -640,7 +684,7 @@
 			"icon_path": "./images/icons/generic.svg",
 			"children": [
 				{
-					"title": "Get started with Coder",
+					"title": "Get started",
 					"description": "Learn how to install and run Coder quickly",
 					"path": "./tutorials/quickstart.md"
 				},

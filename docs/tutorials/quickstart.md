@@ -1,4 +1,4 @@
-# Get started with Coder
+# Quickstart
 
 <div style="padding: 0px; margin: 0px;">
   <span style="vertical-align:middle;">Author: </span>
