@@ -36,6 +36,7 @@ GOOS         := $(shell go env GOOS)
 GOARCH       := $(shell go env GOARCH)
 GOOS_BIN_EXT := $(if $(filter windows, $(GOOS)),.exe,)
 VERSION      := $(shell ./scripts/version.sh)
+POSTGRES_IMAGE   ?= "gcr.io/coder-dev-1/postgres"
 POSTGRES_VERSION ?= 16
 
 # Use the highest ZSTD compression level in CI.
@@ -830,7 +831,7 @@ test-postgres-docker:
 		--restart no \
 		--detach \
 		--memory 16GB \
-		gcr.io/coder-dev-1/postgres:${POSTGRES_VERSION} \
+		${POSTGRES_IMAGE}:${POSTGRES_VERSION} \
 		-c shared_buffers=1GB \
 		-c work_mem=1GB \
 		-c effective_cache_size=1GB \

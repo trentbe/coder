@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -44,6 +45,28 @@ var (
 	defaultConnectionParams        ConnectionParams
 	errDefaultConnectionParamsInit error
 )
+
+// PostgresImage returns the result of looking up the POSTGRES_IMAGE
+// environment variable. If not set or empty, returns a sensible default
+// repository containing a Postgres image.
+func PostgresImage() string {
+	envImage := os.Getenv("POSTGRES_IMAGE")
+	if envImage == "" {
+		envImage = "gcr.io/coder-dev-1/postgres"
+	}
+	return envImage
+}
+
+// PostgresTag returns the result of looking up the POSTGRES_TAG environment
+// variable. If not set or empty, returns a sensible default tag.
+// runtime.GOARCH is appended to the tag name.
+func PostgresTag() string {
+	envTag := os.Getenv("POSTGRES_TAG")
+	if envTag == "" {
+		envTag = fmt.Sprintf("%d-%s", minimumPostgreSQLVersion, runtime.GOARCH)
+	}
+	return envTag
+}
 
 // initDefaultConnection initializes the default postgres connection parameters.
 // It first checks if the database is running at localhost:5432. If it is, it will
@@ -379,8 +402,8 @@ func openContainer(t TBSubset, opts DBContainerOptions) (container, func(), erro
 			return container{}, nil, xerrors.Errorf("create tempdir: %w", err)
 		}
 		runOptions := dockertest.RunOptions{
-			Repository: "gcr.io/coder-dev-1/postgres",
-			Tag:        "13",
+			Repository: PostgresImage(),
+			Tag:        PostgresTag(),
 			Env: []string{
 				"POSTGRES_PASSWORD=postgres",
 				"POSTGRES_USER=postgres",
