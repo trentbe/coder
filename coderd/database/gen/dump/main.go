@@ -39,7 +39,8 @@ func main() {
 
 	connection, cleanup, err := dbtestutil.OpenContainerized(t, dbtestutil.DBContainerOptions{})
 	if err != nil {
-		panic(err)
+		_, _ = fmt.Fprintf(os.Stderr, "unable to open containerized database: %s\n", err.Error())
+		os.Exit(1)
 	}
 	defer cleanup()
 

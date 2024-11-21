@@ -488,7 +488,7 @@ func openContainer(t TBSubset, opts DBContainerOptions) (container, func(), erro
 func OpenContainerized(t TBSubset, opts DBContainerOptions) (string, func(), error) {
 	container, containerCleanup, err := openContainer(t, opts)
 	defer func() {
-		if err != nil {
+		if err != nil && containerCleanup != nil {
 			containerCleanup()
 		}
 	}()
