@@ -9,17 +9,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWoohoo(t *testing.T) {
+func TestOverlayFS(t *testing.T) {
 	a := afero.NewMemMapFs()
 	afero.WriteFile(a, "main.tf", []byte("terraform {}"), 0o644)
+	afero.WriteFile(a, ".terraform/modules/example_module/main.tf", []byte("inaccessible"), 0o644)
+	afero.WriteFile(a, ".terraform/modules/other_module/main.tf", []byte("inaccessible"), 0o644)
 	b := afero.NewMemMapFs()
 	afero.WriteFile(b, ".terraform/modules/modules.json", []byte("{}"), 0o644)
-	it := files.NewOverlayFS(afero.NewIOFS(a), afero.NewIOFS(b), ".terraform/modules")
+	afero.WriteFile(b, ".terraform/modules/example_module/main.tf", []byte("terraform {}"), 0o644)
+
+	it := files.NewOverlayFS(afero.NewIOFS(a), []files.Overlay{{
+		Path: ".terraform/modules",
+		FS:   afero.NewIOFS(b),
+	}})
 
 	content, err := fs.ReadFile(it, "main.tf")
 	require.NoError(t, err)
 	require.Equal(t, "terraform {}", string(content))
+
+	_, err = fs.ReadFile(it, ".terraform/modules/other_module/main.tf")
+	require.Error(t, err)
+
 	content, err = fs.ReadFile(it, ".terraform/modules/modules.json")
 	require.NoError(t, err)
 	require.Equal(t, "{}", string(content))
+
+	content, err = fs.ReadFile(it, ".terraform/modules/example_module/main.tf")
+	require.NoError(t, err)
+	require.Equal(t, "terraform {}", string(content))
 }

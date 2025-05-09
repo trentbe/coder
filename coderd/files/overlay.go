@@ -6,37 +6,51 @@ import (
 	"strings"
 )
 
-type overlay struct {
-	baseFS      fs.FS
-	overlayFS   fs.FS
-	overlayPath string
+// withModulesFS allows you to "join" together the template files tar file fs.FS
+// with the Terraform modules tar file fs.FS. We could potentially turn this
+// into something more parameterized/configurable, but the requirements here are
+// a _bit_ odd, because every file in the modulesFS includes the
+// .terraform/modules/ folder at the beginning of it's path.
+type overlayFS struct {
+	baseFS   fs.FS
+	overlays []Overlay
 }
 
-func NewOverlayFS(baseFS, overlayFS fs.FS, overlayPath string) fs.FS {
-	return overlay{
-		baseFS:      baseFS,
-		overlayFS:   overlayFS,
-		overlayPath: path.Clean(overlayPath),
+type Overlay struct {
+	Path string
+	fs.FS
+}
+
+func NewOverlayFS(baseFS fs.FS, overlays []Overlay) fs.FS {
+	return overlayFS{
+		baseFS:   baseFS,
+		overlays: overlays,
 	}
 }
 
-func (f overlay) Open(p string) (fs.File, error) {
-	if strings.HasPrefix(path.Clean(p), f.overlayPath) {
-		return f.overlayFS.Open(p)
+func (f overlayFS) Open(p string) (fs.File, error) {
+	for _, overlay := range f.overlays {
+		if strings.HasPrefix(path.Clean(p), overlay.Path) {
+			return overlay.FS.Open(p)
+		}
 	}
 	return f.baseFS.Open(p)
 }
 
-func (f overlay) ReadDir(p string) ([]fs.DirEntry, error) {
-	if strings.HasPrefix(path.Clean(p), f.overlayPath) {
-		return f.overlayFS.(fs.ReadDirFS).ReadDir(p)
+func (f overlayFS) ReadDir(p string) ([]fs.DirEntry, error) {
+	for _, overlay := range f.overlays {
+		if strings.HasPrefix(path.Clean(p), overlay.Path) {
+			return overlay.FS.(fs.ReadDirFS).ReadDir(p)
+		}
 	}
 	return f.baseFS.(fs.ReadDirFS).ReadDir(p)
 }
 
-func (f overlay) ReadFile(p string) ([]byte, error) {
-	if strings.HasPrefix(path.Clean(p), f.overlayPath) {
-		return f.overlayFS.(fs.ReadFileFS).ReadFile(p)
+func (f overlayFS) ReadFile(p string) ([]byte, error) {
+	for _, overlay := range f.overlays {
+		if strings.HasPrefix(path.Clean(p), overlay.Path) {
+			return overlay.FS.(fs.ReadFileFS).ReadFile(p)
+		}
 	}
 	return f.baseFS.(fs.ReadFileFS).ReadFile(p)
 }

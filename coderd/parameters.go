@@ -97,7 +97,7 @@ func (api *API) templateVersionDynamicParameters(rw http.ResponseWriter, r *http
 				})
 				return
 			}
-			templateFS = files.NewOverlayFS(templateFS, moduleFilesFS, ".terraform/modules")
+			templateFS = files.NewOverlayFS(templateFS, []files.Overlay{{Path: ".terraform/modules", FS: moduleFilesFS}})
 		}
 	} else if !xerrors.Is(err, sql.ErrNoRows) {
 		httpapi.Write(ctx, rw, http.StatusInternalServerError, codersdk.Response{
