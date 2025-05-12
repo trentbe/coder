@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -36,6 +37,12 @@ func TestGetModulesArchive(t *testing.T) {
 		content, err := fs.ReadFile(tarfs, ".terraform/modules/modules.json")
 		require.NoError(t, err)
 		require.True(t, strings.HasPrefix(string(content), `{"Modules":[{"Key":"","Source":"","Dir":"."},`))
+
+		a, err := fs.ReadDir(tarfs, ".terraform/modules/example_module")
+		require.NoError(t, err)
+		for _, it := range a {
+			fmt.Println("-", it.Name())
+		}
 
 		content, err = fs.ReadFile(tarfs, ".terraform/modules/example_module/main.tf")
 		require.NoError(t, err)

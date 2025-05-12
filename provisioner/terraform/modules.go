@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"encoding/json"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -97,27 +98,28 @@ func getModulesArchive(root fs.FS) ([]byte, error) {
 			if err != nil {
 				return xerrors.Errorf("failed to create modules archive: %w", err)
 			}
-			if info.IsDir() {
+			if !info.Type().IsRegular() {
 				return nil
 			}
-
-			content, err := fs.ReadFile(root, filePath)
+			fi, err := info.Info()
 			if err != nil {
-				return xerrors.Errorf("failed to read module file while archiving: %w", err)
+				return xerrors.Errorf("failed to archive module %q file: %w", it.Key, err)
 			}
+			header, err := tar.FileInfoHeader(fi, info.Name())
+			if err != nil {
+				return xerrors.Errorf("failed to archive module %q file: %w", it.Key, err)
+			}
+
 			empty = false
-			err = w.WriteHeader(&tar.Header{
-				Name: filePath,
-				Size: int64(len(content)),
-				Mode: 0o644,
-				Uid:  1000,
-				Gid:  1000,
-			})
+			err = w.WriteHeader(header)
 			if err != nil {
 				return xerrors.Errorf("failed to add module file to archive: %w", err)
 			}
-			if _, err = w.Write(content); err != nil {
-				return xerrors.Errorf("failed to write module file to archive: %w", err)
+
+			file, err := root.Open(filePath)
+			_, err = io.Copy(w, file)
+			if err != nil {
+				return xerrors.Errorf("failed to read module file while archiving: %w", err)
 			}
 			return nil
 		})
