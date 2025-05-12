@@ -111,6 +111,9 @@ func GetModulesArchive(root fs.FS) ([]byte, error) {
 				return xerrors.Errorf("failed to archive module file  %q: %w", it.Key, err)
 			}
 			header.Name = filePath
+			if fileType.IsDir() {
+				header.Name += "/"
+			}
 
 			err = w.WriteHeader(header)
 			if err != nil {

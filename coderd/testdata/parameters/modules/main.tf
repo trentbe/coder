@@ -1,9 +1,3 @@
-terraform {
-  required_providers {
-    coder = {
-      source = "coder/coder"
-    }
-  }
-}
+terraform {}
 
 module "jetbrains_gateway" {}
