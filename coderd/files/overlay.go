@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// withModulesFS allows you to "join" together the template files tar file fs.FS
+// overlayFS allows you to "join" together the template files tar file fs.FS
 // with the Terraform modules tar file fs.FS. We could potentially turn this
 // into something more parameterized/configurable, but the requirements here are
 // a _bit_ odd, because every file in the modulesFS includes the
