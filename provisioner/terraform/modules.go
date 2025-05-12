@@ -98,24 +98,29 @@ func getModulesArchive(root fs.FS) ([]byte, error) {
 			if err != nil {
 				return xerrors.Errorf("failed to create modules archive: %w", err)
 			}
-			if !info.Type().IsRegular() {
+			fileType := info.Type()
+			if !fileType.IsRegular() && !fileType.IsDir() {
 				return nil
 			}
-			fi, err := info.Info()
+			fileInfo, err := info.Info()
 			if err != nil {
 				return xerrors.Errorf("failed to archive module %q file: %w", it.Key, err)
 			}
-			header, err := tar.FileInfoHeader(fi, info.Name())
+			header, err := tar.FileInfoHeader(fileInfo, "")
 			if err != nil {
 				return xerrors.Errorf("failed to archive module %q file: %w", it.Key, err)
 			}
+			header.Name = filePath
 
-			empty = false
 			err = w.WriteHeader(header)
 			if err != nil {
 				return xerrors.Errorf("failed to add module file to archive: %w", err)
 			}
 
+			if !fileType.IsRegular() {
+				return nil
+			}
+			empty = false
 			file, err := root.Open(filePath)
 			_, err = io.Copy(w, file)
 			if err != nil {

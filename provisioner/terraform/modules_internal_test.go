@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -38,11 +37,10 @@ func TestGetModulesArchive(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, strings.HasPrefix(string(content), `{"Modules":[{"Key":"","Source":"","Dir":"."},`))
 
-		a, err := fs.ReadDir(tarfs, ".terraform/modules/example_module")
+		dirFiles, err := fs.ReadDir(tarfs, ".terraform/modules/example_module")
 		require.NoError(t, err)
-		for _, it := range a {
-			fmt.Println("-", it.Name())
-		}
+		require.Len(t, dirFiles, 1)
+		require.Equal(t, "main.tf", dirFiles[0].Name())
 
 		content, err = fs.ReadFile(tarfs, ".terraform/modules/example_module/main.tf")
 		require.NoError(t, err)
@@ -60,7 +58,7 @@ func TestGetModulesArchive(t *testing.T) {
 		hashBytes := sha256.Sum256(archive)
 		hash := hex.EncodeToString(hashBytes[:])
 		if runtime.GOOS != "windows" {
-			require.Equal(t, "05d2994c1a50ce573fe2c2b29507e5131ba004d15812d8bb0a46dc732f3211f5", hash)
+			require.Equal(t, "c25b5a8bf1d6bdfbeec7e60f875d63d9d612fdbe79b92de1c32fe8d746f7698d", hash)
 		} else {
 			require.Equal(t, "c219943913051e4637527cd03ae2b7303f6945005a262cdd420f9c2af490d572", hash)
 		}
