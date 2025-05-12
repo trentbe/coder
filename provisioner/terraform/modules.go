@@ -108,7 +108,7 @@ func getModulesArchive(root fs.FS) ([]byte, error) {
 			}
 			header, err := tar.FileInfoHeader(fileInfo, "")
 			if err != nil {
-				return xerrors.Errorf("failed to archive module %q file: %w", it.Key, err)
+				return xerrors.Errorf("failed to archive module file  %q: %w", it.Key, err)
 			}
 			header.Name = filePath
 
@@ -122,9 +122,13 @@ func getModulesArchive(root fs.FS) ([]byte, error) {
 			}
 			empty = false
 			file, err := root.Open(filePath)
+			if err != nil {
+				return xerrors.Errorf("failed to open module file %q while archiving: %w", err)
+			}
+			defer file.Close()
 			_, err = io.Copy(w, file)
 			if err != nil {
-				return xerrors.Errorf("failed to read module file while archiving: %w", err)
+				return xerrors.Errorf("failed to copy module file %q while archiving: %w", err)
 			}
 			return nil
 		})

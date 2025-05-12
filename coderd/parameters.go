@@ -70,7 +70,6 @@ func (api *API) templateVersionDynamicParameters(rw http.ResponseWriter, r *http
 	}
 
 	templateFS, err := api.FileCache.Acquire(fileCtx, fileID)
-	defer api.FileCache.Release(fileID)
 	if err != nil {
 		httpapi.Write(ctx, rw, http.StatusNotFound, codersdk.Response{
 			Message: "Internal error fetching template version Terraform.",
@@ -90,7 +89,6 @@ func (api *API) templateVersionDynamicParameters(rw http.ResponseWriter, r *http
 
 		if tf.CachedModuleFiles.Valid {
 			moduleFilesFS, err := api.FileCache.Acquire(fileCtx, tf.CachedModuleFiles.UUID)
-			defer api.FileCache.Release(tf.CachedModuleFiles.UUID)
 			if err != nil {
 				httpapi.Write(ctx, rw, http.StatusNotFound, codersdk.Response{
 					Message: "Internal error fetching Terraform modules.",
@@ -98,6 +96,7 @@ func (api *API) templateVersionDynamicParameters(rw http.ResponseWriter, r *http
 				})
 				return
 			}
+			defer api.FileCache.Release(tf.CachedModuleFiles.UUID)
 			templateFS = files.NewOverlayFS(templateFS, []files.Overlay{{Path: ".terraform/modules", FS: moduleFilesFS}})
 		}
 	} else if !xerrors.Is(err, sql.ErrNoRows) {
