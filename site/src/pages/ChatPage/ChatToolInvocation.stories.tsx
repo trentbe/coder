@@ -5,7 +5,7 @@ import {
 	MockStoppingWorkspace,
 	MockTemplate,
 	MockTemplateVersion,
-	MockUser,
+	MockUserMember,
 	MockWorkspace,
 	MockWorkspaceBuild,
 } from "testHelpers/entities";
@@ -122,7 +122,8 @@ export const TemplateVersionParameters: Story = {
 };
 
 export const GetAuthenticatedUser: Story = {
-	render: () => renderInvocations("coder_get_authenticated_user", {}, MockUser),
+	render: () =>
+		renderInvocations("coder_get_authenticated_user", {}, MockUserMember),
 };
 
 export const CreateWorkspaceBuild: Story = {
