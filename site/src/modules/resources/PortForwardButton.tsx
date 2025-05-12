@@ -1,9 +1,6 @@
 import { type Interpolation, type Theme, useTheme } from "@emotion/react";
-import CloseIcon from "@mui/icons-material/Close";
-import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
-import OpenInNewOutlined from "@mui/icons-material/OpenInNewOutlined";
 import SensorsIcon from "@mui/icons-material/Sensors";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Button from "@mui/material/Button";
@@ -42,6 +39,7 @@ import {
 } from "components/deprecated/Popover/Popover";
 import { type FormikContextType, useFormik } from "formik";
 import { type ClassName, useClassName } from "hooks/useClassName";
+import { ChevronDownIcon, ExternalLinkIcon, X as XIcon } from "lucide-react";
 import { useDashboard } from "modules/dashboard/useDashboard";
 import { type FC, useState } from "react";
 import { useMutation, useQuery } from "react-query";
@@ -82,7 +80,7 @@ export const PortForwardButton: FC<PortForwardButtonProps> = (props) => {
 					disabled={!portsQuery.data}
 					size="small"
 					variant="text"
-					endIcon={<KeyboardArrowDown />}
+					endIcon={<ChevronDownIcon className="size-4" />}
 					css={{ fontSize: 13, padding: "8px 12px" }}
 					startIcon={
 						portsQuery.data ? (
@@ -308,11 +306,10 @@ export const PortForwardPopoverView: FC<PortForwardPopoverViewProps> = ({
 										minWidth: 0,
 									}}
 								>
-									<OpenInNewOutlined
+									<ExternalLinkIcon
+										className="size-icon-xs"
 										css={{
 											flexShrink: 0,
-											width: 14,
-											height: 14,
 											color: theme.palette.text.primary,
 										}}
 									/>
@@ -497,7 +494,7 @@ export const PortForwardPopoverView: FC<PortForwardPopoverViewProps> = ({
 												await sharedPortsQuery.refetch();
 											}}
 										>
-											<CloseIcon
+											<XIcon
 												css={{
 													width: 14,
 													height: 14,

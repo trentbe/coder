@@ -78,6 +78,7 @@ func (api *API) templateVersionDynamicParameters(rw http.ResponseWriter, r *http
 		})
 		return
 	}
+	defer api.FileCache.Release(fileID)
 
 	// Having the Terraform plan available for the evaluation engine is helpful
 	// for populating values from data blocks, but isn't strictly required. If

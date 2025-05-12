@@ -18,18 +18,15 @@ type module struct {
 	Source  string `json:"Source"`
 	Version string `json:"Version"`
 	Key     string `json:"Key"`
+	Dir     string `json:"Dir"`
 }
 
 type modulesFile struct {
 	Modules []*module `json:"Modules"`
 }
 
-func getModulesDirectory(workdir string) string {
-	return filepath.Join(workdir, ".terraform", "modules")
-}
-
 func getModulesFilePath(workdir string) string {
-	return filepath.Join(getModulesDirectory(workdir), "modules.json")
+	return filepath.Join(workdir, ".terraform", "modules", "modules.json")
 }
 
 func parseModulesFile(filePath string) ([]*proto.Module, error) {
@@ -71,55 +68,79 @@ func getModules(workdir string) ([]*proto.Module, error) {
 	return filteredModules, nil
 }
 
-func getModulesArchive(workdir string) ([]byte, error) {
-	modulesDir := getModulesDirectory(workdir)
-	if _, err := os.ReadDir(modulesDir); err != nil {
-		if os.IsNotExist(err) {
+func getModulesArchive(root fs.FS) ([]byte, error) {
+	modulesFileContent, err := fs.ReadFile(root, ".terraform/modules/modules.json")
+	if err != nil {
+		if xerrors.Is(err, fs.ErrNotExist) {
 			return []byte{}, nil
 		}
-
-		return nil, err
+		return nil, xerrors.Errorf("failed to read modules.json: %w", err)
 	}
+	var m modulesFile
+	if err := json.Unmarshal(modulesFileContent, &m); err != nil {
+		return nil, xerrors.Errorf("failed to parse modules.json: %w", err)
+	}
+
 	empty := true
 	var b bytes.Buffer
 	w := tar.NewWriter(&b)
-	err := filepath.WalkDir(modulesDir, func(filePath string, info fs.DirEntry, err error) error {
-		if err != nil {
-			return xerrors.Errorf("failed to create modules archive: %w", err)
-		}
-		if info.IsDir() {
-			return nil
-		}
-		archivePath, found := strings.CutPrefix(filePath, workdir+string(os.PathSeparator))
-		if !found {
-			return xerrors.Errorf("walked invalid file path: %q", filePath)
+
+	for _, it := range m.Modules {
+		// Check to make sure that the module is a remote module fetched by
+		// Terraform. Any module that doesn't start with this path is already local,
+		// and should be part of the template files already.
+		if !strings.HasPrefix(it.Dir, ".terraform/modules/") {
+			continue
 		}
 
-		content, err := os.ReadFile(filePath)
-		if err != nil {
-			return xerrors.Errorf("failed to read module file while archiving: %w", err)
-		}
-		empty = false
-		err = w.WriteHeader(&tar.Header{
-			Name: archivePath,
-			Size: int64(len(content)),
-			Mode: 0o644,
-			Uid:  1000,
-			Gid:  1000,
+		err := fs.WalkDir(root, it.Dir, func(filePath string, info fs.DirEntry, err error) error {
+			if err != nil {
+				return xerrors.Errorf("failed to create modules archive: %w", err)
+			}
+			if info.IsDir() {
+				return nil
+			}
+
+			content, err := fs.ReadFile(root, filePath)
+			if err != nil {
+				return xerrors.Errorf("failed to read module file while archiving: %w", err)
+			}
+			empty = false
+			err = w.WriteHeader(&tar.Header{
+				Name: filePath,
+				Size: int64(len(content)),
+				Mode: 0o644,
+				Uid:  1000,
+				Gid:  1000,
+			})
+			if err != nil {
+				return xerrors.Errorf("failed to add module file to archive: %w", err)
+			}
+			if _, err = w.Write(content); err != nil {
+				return xerrors.Errorf("failed to write module file to archive: %w", err)
+			}
+			return nil
 		})
 		if err != nil {
-			return xerrors.Errorf("failed to add module file to archive: %w", err)
+			return nil, err
 		}
-		if _, err = w.Write(content); err != nil {
-			return xerrors.Errorf("failed to write module file to archive: %w", err)
-		}
-		return nil
+	}
+
+	err = w.WriteHeader(&tar.Header{
+		Name: ".terraform/modules/modules.json",
+		Size: int64(len(modulesFileContent)),
+		Mode: 0o644,
+		Uid:  1000,
+		Gid:  1000,
 	})
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("failed to write modules.json to archive: %w", err)
 	}
-	err = w.Close()
-	if err != nil {
+	if _, err := w.Write(modulesFileContent); err != nil {
+		return nil, xerrors.Errorf("failed to write modules.json to archive: %w", err)
+	}
+
+	if err := w.Close(); err != nil {
 		return nil, xerrors.Errorf("failed to close module files archive: %w", err)
 	}
 	// Don't persist empty tar files in the database
