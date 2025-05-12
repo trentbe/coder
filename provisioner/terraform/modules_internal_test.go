@@ -26,7 +26,7 @@ func TestGetModulesArchive(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		t.Parallel()
 
-		archive, err := getModulesArchive(os.DirFS(filepath.Join("testdata", "modules-source-caching")))
+		archive, err := GetModulesArchive(os.DirFS(filepath.Join("testdata", "modules-source-caching")))
 		require.NoError(t, err)
 
 		// Check that all of the files it should contain are correct
@@ -70,7 +70,7 @@ func TestGetModulesArchive(t *testing.T) {
 		root := afero.NewMemMapFs()
 		afero.WriteFile(root, ".terraform/modules/modules.json", []byte(`{"Modules":[{"Key":"","Source":"","Dir":"."}]}`), 0o644)
 
-		archive, err := getModulesArchive(afero.NewIOFS(root))
+		archive, err := GetModulesArchive(afero.NewIOFS(root))
 		require.NoError(t, err)
 		require.Equal(t, []byte{}, archive)
 	})

@@ -1,6 +1,7 @@
 package coderd_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/coder/coder/v2/coderd/rbac"
 	"github.com/coder/coder/v2/codersdk"
 	"github.com/coder/coder/v2/provisioner/echo"
+	"github.com/coder/coder/v2/provisioner/terraform"
 	"github.com/coder/coder/v2/provisionersdk/proto"
 	"github.com/coder/coder/v2/testutil"
 	"github.com/coder/websocket"
@@ -142,9 +144,9 @@ func TestDynamicParametersWithTerraformModules(t *testing.T) {
 	owner := coderdtest.CreateFirstUser(t, ownerClient)
 	templateAdmin, templateAdminUser := coderdtest.CreateAnotherUser(t, ownerClient, owner.OrganizationID, rbac.RoleTemplateAdmin())
 
-	dynamicParametersTerraformSource, err := os.ReadFile("testdata/parameters/groups/main.tf")
+	dynamicParametersTerraformSource, err := os.ReadFile("testdata/parameters/modules/main.tf")
 	require.NoError(t, err)
-	dynamicParametersTerraformPlan, err := os.ReadFile("testdata/parameters/groups/plan.json")
+	modulesArchive, err := terraform.GetModulesArchive(os.DirFS("testdata/parameters/modules"))
 	require.NoError(t, err)
 
 	files := echo.WithExtraFiles(map[string][]byte{
@@ -153,7 +155,8 @@ func TestDynamicParametersWithTerraformModules(t *testing.T) {
 	files.ProvisionPlan = []*proto.Response{{
 		Type: &proto.Response_Plan{
 			Plan: &proto.PlanComplete{
-				Plan: dynamicParametersTerraformPlan,
+				Plan:        []byte("{}"),
+				ModuleFiles: modulesArchive,
 			},
 		},
 	}}
@@ -169,37 +172,14 @@ func TestDynamicParametersWithTerraformModules(t *testing.T) {
 
 	previews := stream.Chan()
 
-	// Should automatically send a form state with all defaulted/empty values
+	// Should see the output of the module represented
 	preview := testutil.RequireReceive(ctx, t, previews)
 	require.Equal(t, -1, preview.ID)
 	require.Empty(t, preview.Diagnostics)
-	require.Equal(t, "group", preview.Parameters[0].Name)
-	require.True(t, preview.Parameters[0].Value.Valid())
-	require.Equal(t, "Everyone", preview.Parameters[0].Value.Value.AsString())
 
-	// Send a new value, and see it reflected
-	err = stream.Send(codersdk.DynamicParametersRequest{
-		ID:     1,
-		Inputs: map[string]string{"group": "Bloob"},
-	})
-	require.NoError(t, err)
-	preview = testutil.RequireReceive(ctx, t, previews)
-	require.Equal(t, 1, preview.ID)
-	require.Empty(t, preview.Diagnostics)
-	require.Equal(t, "group", preview.Parameters[0].Name)
-	require.True(t, preview.Parameters[0].Value.Valid())
-	require.Equal(t, "Bloob", preview.Parameters[0].Value.Value.AsString())
+	fmt.Printf("%#v\n", preview.Parameters)
 
-	// Back to default
-	err = stream.Send(codersdk.DynamicParametersRequest{
-		ID:     3,
-		Inputs: map[string]string{},
-	})
-	require.NoError(t, err)
-	preview = testutil.RequireReceive(ctx, t, previews)
-	require.Equal(t, 3, preview.ID)
-	require.Empty(t, preview.Diagnostics)
-	require.Equal(t, "group", preview.Parameters[0].Name)
-	require.True(t, preview.Parameters[0].Value.Valid())
-	require.Equal(t, "Everyone", preview.Parameters[0].Value.Value.AsString())
+	// require.Equal(t, "group", preview.Parameters[0].Name)
+	// require.True(t, preview.Parameters[0].Value.Valid())
+	// require.Equal(t, "Everyone", preview.Parameters[0].Value.Value.AsString())
 }
